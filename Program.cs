@@ -6,6 +6,12 @@ internal static class Program
     private static void Main(string[] args)
     {
         ApplicationConfiguration.Initialize();
+        var diagnosticsArg = args.FirstOrDefault(a => a.StartsWith("--diagnose=", StringComparison.OrdinalIgnoreCase));
+        if (diagnosticsArg is not null)
+        {
+            DiagnosticsExporter.Export(diagnosticsArg["--diagnose=".Length..].Trim('"'));
+            return;
+        }
         var snapshotArg = args.FirstOrDefault(a => a.StartsWith("--snapshot=", StringComparison.OrdinalIgnoreCase));
         if (snapshotArg is not null)
         {

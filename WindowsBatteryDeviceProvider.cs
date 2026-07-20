@@ -12,10 +12,19 @@ internal sealed class WindowsBatteryDeviceProvider : IBatteryDeviceProvider
 {
     private const string Script = """
         $ErrorActionPreference = 'SilentlyContinue'
-        $items = foreach ($device in Get-PnpDevice -PresentOnly) {
-          $battery = Get-PnpDeviceProperty -InstanceId $device.InstanceId -KeyName 'DEVPKEY_Device_BatteryLevel'
-          if ($null -eq $battery -or $null -eq $battery.Data) { continue }
-          $percent = [int]$battery.Data
+        $devices = @(Get-PnpDevice -Class Bluetooth -PresentOnly)
+        $batteryById = @{}
+        if ($devices.Count -gt 0) {
+          $properties = @(Get-PnpDeviceProperty -InstanceId @($devices.InstanceId) -KeyName 'DEVPKEY_Device_BatteryLevel')
+          foreach ($property in $properties) {
+            if ($null -ne $property.Data) {
+              $batteryById[$property.InstanceId] = [int]$property.Data
+            }
+          }
+        }
+        $items = foreach ($device in $devices) {
+          if (-not $batteryById.ContainsKey($device.InstanceId)) { continue }
+          $percent = $batteryById[$device.InstanceId]
           if ($percent -lt 0 -or $percent -gt 100) { continue }
           [pscustomobject]@{
             Id = $device.InstanceId
@@ -25,7 +34,7 @@ internal sealed class WindowsBatteryDeviceProvider : IBatteryDeviceProvider
             Class = [string]$device.Class
           }
         }
-        @($items) | ConvertTo-Json -Compress
+        ConvertTo-Json -InputObject @($items) -Compress
         """;
 
     public async Task<IReadOnlyList<BatteryDevice>> GetDevicesAsync(CancellationToken cancellationToken = default)
@@ -53,11 +62,15 @@ internal sealed class WindowsBatteryDeviceProvider : IBatteryDeviceProvider
         {
             using var document = JsonDocument.Parse(output);
             var root = document.RootElement;
-            if (root.ValueKind != JsonValueKind.Array)
-                return [];
+            var items = root.ValueKind switch
+            {
+                JsonValueKind.Array => root.EnumerateArray().ToArray(),
+                JsonValueKind.Object => [root],
+                _ => []
+            };
 
             var now = DateTime.Now;
-            return root.EnumerateArray()
+            return items
                 .Select(item => new BatteryDevice(
                     item.GetProperty("Id").GetString() ?? Guid.NewGuid().ToString(),
                     CleanName(item.GetProperty("Name").GetString()),
@@ -82,8 +95,10 @@ internal sealed class WindowsBatteryDeviceProvider : IBatteryDeviceProvider
     private static BatteryDeviceKind GuessKind(string? name, string? deviceClass)
     {
         var value = $"{name} {deviceClass}".ToLowerInvariant();
-        if (value.Contains("keyboard") || value.Contains("키보드") || value.Contains("keys")) return BatteryDeviceKind.Keyboard;
-        if (value.Contains("mouse") || value.Contains("마우스") || value.Contains("master")) return BatteryDeviceKind.Mouse;
+        if (value.Contains("keyboard") || value.Contains("키보드") || value.Contains("keys") ||
+            value.Contains("durgod") || value.Contains("k310") || value.Contains("k320")) return BatteryDeviceKind.Keyboard;
+        if (value.Contains("mouse") || value.Contains("마우스") || value.Contains("master") ||
+            value.Contains("keychron m6") || value.Contains("keychron m3")) return BatteryDeviceKind.Mouse;
         if (value.Contains("head") || value.Contains("audio") || value.Contains("이어") || value.Contains("wh-")) return BatteryDeviceKind.Headphones;
         if (value.Contains("game") || value.Contains("controller") || value.Contains("xbox")) return BatteryDeviceKind.Gamepad;
         return BatteryDeviceKind.Other;

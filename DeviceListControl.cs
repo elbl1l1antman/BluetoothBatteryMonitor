@@ -6,6 +6,7 @@ internal sealed class DeviceListControl : Control
 {
     private IReadOnlyList<BatteryDevice> _devices = [];
     private HashSet<string> _taskbarDeviceIds = [];
+    private bool _isLoading = true;
 
     public event EventHandler<(string DeviceId, bool Selected)>? TaskbarSelectionChanged;
 
@@ -18,6 +19,7 @@ internal sealed class DeviceListControl : Control
     public void SetDevices(IReadOnlyList<BatteryDevice> devices, IEnumerable<string>? taskbarDeviceIds = null)
     {
         _devices = devices;
+        _isLoading = false;
         if (taskbarDeviceIds is not null)
             _taskbarDeviceIds = taskbarDeviceIds.ToHashSet(StringComparer.OrdinalIgnoreCase);
         Invalidate();
@@ -118,9 +120,10 @@ internal sealed class DeviceListControl : Control
         using var text = new SolidBrush(Theme.Text);
         using var muted = new SolidBrush(Theme.Muted);
         using var centered = new StringFormat { Alignment = StringAlignment.Center };
-        graphics.DrawString("배터리 정보를 제공하는 기기가 없습니다", title, text,
+        graphics.DrawString(_isLoading ? "배터리 정보를 확인하고 있습니다" : "배터리 정보를 제공하는 기기가 없습니다", title, text,
             new RectangleF(0, 174, Width, 26), centered);
-        graphics.DrawString("Bluetooth 기기를 연결한 뒤 새로 고침해 주세요.\nWindows에 배터리 잔량이 표시되는 기기만 나타납니다.",
+        graphics.DrawString(_isLoading ? "연결된 Bluetooth 기기를 검색하는 중입니다." :
+            "Bluetooth 기기를 연결한 뒤 새로 고침해 주세요.\nWindows에 배터리 잔량이 표시되는 기기만 나타납니다.",
             body, muted, new RectangleF(0, 212, Width, 55), centered);
     }
 

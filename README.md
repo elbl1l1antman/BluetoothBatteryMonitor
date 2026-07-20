@@ -22,6 +22,14 @@ Windows가 배터리 잔량을 제공하는 Bluetooth 키보드, 마우스, 헤�
 dotnet run --project .\BluetoothBatteryMonitor.csproj -- --live
 ```
 
+관리자 권한은 필요하지 않습니다. Windows PnP에서 공개한 읽기 전용 배터리 속성을 현재 사용자 권한으로 조회합니다.
+
+실제 장치 조회 진단 파일 생성:
+
+```powershell
+.\bin\Release\net10.0-windows\BluetoothBatteryMonitor.exe --diagnose=.\diagnostics.json
+```
+
 Debug 빌드는 화면 검증을 위해 기본적으로 시연 데이터를 사용합니다. 명시적인 디자인/시연 모드:
 
 ```powershell
