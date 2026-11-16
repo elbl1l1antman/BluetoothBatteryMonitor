@@ -4,6 +4,10 @@
 
 Windows가 배터리 잔량을 제공하는 Bluetooth 키보드, 마우스, 헤드폰, 게임 컨트롤러만 모아 작업표시줄과 바탕화면에 표시하는 Windows 11용 유틸리티 뼈대입니다.
 
+## 다운로드
+
+빌드 없이 바로 쓰려면 [Releases](../../releases)에서 최신 `BluetoothBatteryMonitor-win-x64.zip`을 받아 압축을 풀고 `BluetoothBatteryMonitor.exe`를 실행하세요. `v*` 태그가 푸시될 때마다 GitHub Actions(`.github/workflows/release.yml`)가 Windows에서 자동으로 단일 실행 파일을 빌드해 Release에 올립니다.
+
 ## 현재 구현
 
 - Windows PnP의 `DEVPKEY_Device_BatteryLevel` 속성을 읽는 실제 장치 공급자
