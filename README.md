@@ -38,9 +38,10 @@ dotnet run --project .\BluetoothBatteryMonitor.csproj -- --demo
 
 ## 구조
 
-- `WindowsBatteryDeviceProvider`: Windows가 공개한 배터리 속성만 수집
-- `IBatteryDeviceProvider`: 향후 WinRT Bluetooth GATT 공급자나 제조사별 어댑터를 추가하는 경계
-- `TrayApplicationContext`: 앱 수명, 새로 고침, 알림, 트레이 상태 관리
-- `DashboardForm`, `DesktopWidgetForm`, `TrayPopoverForm`: 서로 독립된 UI 표면
+- `App/`: 앱 진입점과 수명 관리 — `Program`, `TrayApplicationContext`, `AppSettings`, `StartupManager`
+- `Providers/`: 배터리 정보 공급자 — `IBatteryDeviceProvider`(향후 WinRT Bluetooth GATT 공급자나 제조사별 어댑터를 추가하는 경계), `WindowsBatteryDeviceProvider`(Windows가 공개한 배터리 속성만 수집), `DemoBatteryDeviceProvider`
+- `Models/`: 공유 데이터 모델 — `BatteryDevice`
+- `UI/`: 서로 독립된 UI 표면과 렌더링 — `DashboardForm`, `DesktopWidgetForm`, `TrayPopoverForm`, `DeviceListControl`, `BatteryIconRenderer`, `Theme`, `NativeWindowStyle`
+- `Diagnostics/`: 진단 내보내기 — `DiagnosticsExporter`, `UiSnapshotExporter`
 
 일부 제조사는 전용 리시버나 앱을 통해서만 배터리 값을 노출합니다. 이 경우 Windows 장치 속성에 값이 없으므로 현재 버전에는 표시되지 않으며, 이후 공급자 어댑터로 확장할 수 있습니다.
